@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { PencilSquareIcon, ShieldCheckIcon, SparklesIcon, HeartIcon, CalendarIcon, CreditCardIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
+import { API_BASE_URL } from "../config/api";
+
 
 export default function ProfilePage() {
   const { user, updateUser, logoutUser } = useContext(AuthContext);
@@ -57,11 +59,11 @@ export default function ProfilePage() {
       // );
 
       // For avatar upload
-const res = await axios.put(
-  `${import.meta.env.VITE_API_BASE_URL}/api/user/avatar/${user._id}`,
-  formData,
-  { headers: { "Content-Type": "multipart/form-data" } }
-);
+      const res = await axios.put(
+        `${API_BASE_URL}/user/avatar/${user._id}`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
 
       updateUser({ avatar: res.data.avatar });
       setAvatarPreview(res.data.avatar);
@@ -88,10 +90,10 @@ const res = await axios.put(
       // );
 
       // For profile update
-const res = await axios.put(
-  `${import.meta.env.VITE_API_BASE_URL}/api/user/profile/${user._id}`,
-  editForm
-);
+      const res = await axios.put(
+        `${API_BASE_URL}/user/profile/${user._id}`,
+        editForm
+      );
   
       updateUser(res.data);
       setIsEditing(false);
