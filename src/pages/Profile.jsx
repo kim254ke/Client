@@ -50,11 +50,18 @@ export default function ProfilePage() {
       const formData = new FormData();
       formData.append("avatar", file);
 
-      const res = await axios.put(
-        `http://localhost:5000/api/user/avatar/${user._id}`,
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
+      // const res = await axios.put(
+      //   `http://localhost:5000/api/user/avatar/${user._id}`,
+      //   formData,
+      //   { headers: { "Content-Type": "multipart/form-data" } }
+      // );
+
+      // For avatar upload
+const res = await axios.put(
+  `${import.meta.env.VITE_API_BASE_URL}/api/user/avatar/${user._id}`,
+  formData,
+  { headers: { "Content-Type": "multipart/form-data" } }
+);
 
       updateUser({ avatar: res.data.avatar });
       setAvatarPreview(res.data.avatar);
@@ -75,10 +82,16 @@ export default function ProfilePage() {
     try {
       setLoading(true); 
   
-      const res = await axios.put(
-        `http://localhost:5000/api/user/profile/${user._id}`,
-        editForm
-      );
+      // const res = await axios.put(
+      //   `http://localhost:5000/api/user/profile/${user._id}`,
+      //   editForm
+      // );
+
+      // For profile update
+const res = await axios.put(
+  `${import.meta.env.VITE_API_BASE_URL}/api/user/profile/${user._id}`,
+  editForm
+);
   
       updateUser(res.data);
       setIsEditing(false);

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Since your backend runs on port 5000 (from server.js)
-const API_URL = "http://localhost:5000/api";
+const API_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
 
 // Get all bookings for a user
 export const getUserBookings = async (userId, token) => {
