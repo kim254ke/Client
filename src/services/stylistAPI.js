@@ -1,20 +1,22 @@
+// stylistRoutes.js (or similar file)
+
 import axios from "axios";
 import { API_BASE_URL } from "../config/api";
 
-// const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api/stylists`;
+const STYLISTS_URL = `${API_BASE_URL}/api/stylists`; // Correct Prefix
 
 export const getStylists = async () => {
-  const response = await axios.get(API_BASE_URL);
+  const response = await axios.get(STYLISTS_URL); // Calls: .../api/stylists (Fixed 404!)
   return response.data;
 };
 
 export const getStylistById = async (id) => {
-  const response = await axios.get(`${API_BASE_URL}/${id}`);
+  const response = await axios.get(`${STYLISTS_URL}/${id}`);
   return response.data;
 };
 
 export const createStylist = async (stylist, token) => {
-  const response = await axios.post(API_BASE_URL, stylist, {
+  const response = await axios.post(STYLISTS_URL, stylist, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
