@@ -10,9 +10,24 @@ export default function ProfilePage() {
   const { user, updateUser, logoutUser } = useContext(AuthContext);
   const navigate = useNavigate();
   
-  const [avatarPreview, setAvatarPreview] = useState(
-    user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || "User")}&background=9333EA&color=fff&size=200`
-  );
+  // Helper function to get full avatar URL
+  const getAvatarUrl = (avatarPath) => {
+    if (!avatarPath) {
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || "User")}&background=9333EA&color=fff&size=200`;
+    }
+    
+    // If already full URL, return as-is
+    if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
+      return avatarPath;
+    }
+    
+    // Build full URL from relative path
+    const baseUrl = API_BASE_URL.replace('/api', '');
+    const filename = avatarPath.split('/').pop();
+    return `${baseUrl}/uploads/avatars/${filename}`;
+  };
+  
+  const [avatarPreview, setAvatarPreview] = useState(getAvatarUrl(user?.avatar));
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
     name: user?.name || "",
@@ -22,16 +37,8 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user?.avatar) {
-      const avatarUrl = user.avatar.startsWith('http') 
-        ? user.avatar 
-        : `${API_BASE_URL.replace('/api', '')}/uploads/avatars/${user.avatar.split('/').pop()}`;
-      setAvatarPreview(avatarUrl);
-    } else {
-      setAvatarPreview(`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || "User")}&background=9333EA&color=fff&size=200`);
-    }
-    
     if (user) {
+      setAvatarPreview(getAvatarUrl(user.avatar));
       setEditForm({
         name: user.name || "",
         phone: user.phone || "",
@@ -44,6 +51,19 @@ export default function ProfilePage() {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size should be less than 5MB");
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    // Show preview immediately
     const reader = new FileReader();
     reader.onload = () => setAvatarPreview(reader.result);
     reader.readAsDataURL(file);
@@ -55,17 +75,25 @@ export default function ProfilePage() {
       const res = await axios.put(
         `${API_BASE_URL}/user/avatar/${user._id}`,
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        { 
+          headers: { 
+            "Content-Type": "multipart/form-data",
+            "Authorization": `Bearer ${localStorage.getItem('token')}` // Add auth token
+          } 
+        }
       );
 
-      updateUser({ avatar: res.data.avatar });
-      setAvatarPreview(res.data.avatar);
+      // Update user context with new avatar
+      const newAvatarUrl = getAvatarUrl(res.data.avatar);
+      updateUser({ ...user, avatar: res.data.avatar });
+      setAvatarPreview(newAvatarUrl);
       toast.success("Avatar updated successfully!");
       
     } catch (err) {
       console.error("Failed to upload avatar:", err);
-      toast.error("Failed to upload avatar. Please try again.");
-      setAvatarPreview(user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || "User")}&background=9333EA&color=fff&size=200`);
+      toast.error(err.response?.data?.message || "Failed to upload avatar. Please try again.");
+      // Revert to old avatar on error
+      setAvatarPreview(getAvatarUrl(user.avatar));
     }
   };
 
@@ -74,10 +102,25 @@ export default function ProfilePage() {
       toast.error("Cannot edit profile at the moment.");
       return;
     }
+
+    // Validate inputs
+    if (!editForm.name.trim()) {
+      toast.error("Name cannot be empty");
+      return;
+    }
   
     try {
       setLoading(true);
-      const res = await axios.put(`${API_BASE_URL}/user/profile/${user._id}`, editForm);
+      const res = await axios.put(
+        `${API_BASE_URL}/user/profile/${user._id}`, 
+        editForm,
+        {
+          headers: {
+            "Authorization": `Bearer ${localStorage.getItem('token')}` // Add auth token
+          }
+        }
+      );
+      
       updateUser(res.data);
       setIsEditing(false);
       toast.success("Profile updated successfully!");
